@@ -13,7 +13,7 @@ document.addEventListener('alpine:init', () => {
             paginationLoading: false,
             totalRecords: 0,
             currentPage: 1,
-            pageSize: 10,
+            limit: 10,
             totalPages: 0,
 
             async init() {
@@ -201,12 +201,11 @@ document.addEventListener('alpine:init', () => {
                     },
                     pagination: {
                         enabled: true,
-                        limit: this.pageSize,
+                        limit: this.limit,
                         server: {
                             url: (prev, page, limit) => {
                                 this.paginationLoading = true;
                                 this.currentPage = page + 1;
-                                this.pageSize = limit;
                                 return `${prev}?page=${page + 1}&size=${limit}`;
                             }
                         }
