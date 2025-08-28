@@ -162,7 +162,7 @@ document.addEventListener('alpine:init', () => {
                         }
                     ],
                     server: {
-                        url: () => this.buildApiUrl(this.currentPage, this.pageSize),
+                         url: '/odp/api/odp-result-page',
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -207,7 +207,7 @@ document.addEventListener('alpine:init', () => {
                                 this.paginationLoading = true;
                                 this.currentPage = page + 1;
                                 this.pageSize = limit;
-                                return this.buildApiUrl(page + 1, limit, prev);
+                                return `${prev}?page=${page + 1}&size=${limit}`;
                             }
                         }
                     },
@@ -288,18 +288,6 @@ document.addEventListener('alpine:init', () => {
                     const clientId = parseInt(item.client?.id) || 0;
                     return sum + clientId;
                 }, 0);
-            },
-
-            getBaseApiUrl(prevUrl = null) {
-                if (prevUrl) {
-                    return prevUrl.includes('?') ? prevUrl.split('?')[0] : prevUrl;
-                }
-                return '/odp/api/odp-result-page';
-            },
-
-            buildApiUrl(page, size, prevUrl = null) {
-                const baseUrl = this.getBaseApiUrl(prevUrl);
-                return `${baseUrl}?page=${page}&size=${size}`;
             },
 
             clearResults() {
