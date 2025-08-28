@@ -176,7 +176,7 @@ document.addEventListener('alpine:init', () => {
                             this.totalPages = data.totalPages || 1;
                             this.totalClientIdSum = this.calculateTotalClientIdSum(data.allData || this.results);
 
-                            // Update summary after data loads
+
                             this.$nextTick(() => {
                                 this.updateSummary();
                             });
@@ -191,51 +191,19 @@ document.addEventListener('alpine:init', () => {
                             ]);
                         },
                         total: data => data.totalRecords || 0,
-                        body: JSON.stringify(this.searchDTO),
-                        handle: async (res) => {
-                            if (!res.ok) {
-                                const error = await res.json().catch(() => ({}));
-                                throw new Error(error.message || 'Failed to fetch data');
-                            }
-                            return await res.json();
-                        }
+                        body: JSON.stringify(this.searchDTO)
                     },
                     pagination: {
                         enabled: true,
                         limit: this.limit,
                         server: {
-                            url: (prev, page, limit) => {
-                                this.paginationLoading = true;
-                                this.currentPage = page + 1;
-                                return `${prev}?page=${page + 1}&size=${limit}`;
-                            }
+                            url: (prev, page, limit) => `${prev}?limit=${limit}&page=${page + 1}`
                         }
                     },
                     search: true,
                     sort: true,
                     fixedHeader: true,
-                    language: {
-                    search: {
-                        placeholder: 'Search in results...'
-                    },
-                    pagination: {
-                        previous: '⬅️',
-                        next: '➡️',
-                        showing: 'Showing',
-                        results: () => 'Records',
-                        noRecords: 'No records found'
-                    }
-            },
-            error: (error) => {
-                this.loading = false;
-                this.paginationLoading = false;
-                return gridjs.html(`
-                    <div class="alert alert-danger p-2">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        ${error.message || 'Error displaying data'}
-                    </div>
-                `);
-            }
+
             }).render(gridContainer);
 
             // Set up event listeners for grid changes
