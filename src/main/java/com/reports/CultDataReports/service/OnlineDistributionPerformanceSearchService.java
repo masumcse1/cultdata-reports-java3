@@ -8,6 +8,7 @@ import com.reports.CultDataReports.dto.ReportDto;
 import com.reports.CultDataReports.exception.ReportException;
 import com.reports.CultDataReports.integraion.CultDataRestClient;
 import com.reports.CultDataReports.integraion.CultDataRestClientForOdpr;
+import com.reports.CultDataReports.responsedto.ReportPage;
 import com.reports.CultDataReports.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -28,21 +29,13 @@ public class OnlineDistributionPerformanceSearchService implements IOnlineDistri
 
     private final CultDataRestClientForOdpr cultDataRestClientForOdpr;
     @Override
-    public List<ReportDto> getLatestReportsByDmID(OnlineDistributionPerformanceSearchRequest dto) {
+    public ReportPage getLatestReportsByDmID(OnlineDistributionPerformanceSearchRequest dto) {
 
-        List<ReportDto> reportResultDtos = new ArrayList<>();
+
         Integer dmID =  dto.getDistributionManagers().get(0);
-        List<ReportDto> latestOdprReports = cultDataRestClientForOdpr.getLatestOdprReportsByDmID(dto.getPage(),dto.getSize(),dmID);
-        latestOdprReports.forEach(report -> {
-            report.setDmId(14752);
-            report.setDmName("dmname");
-            try {
-                report.setMonth(DateUtil.monthFormat(report.getMonth()));
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        reportResultDtos.addAll(latestOdprReports);
+        ReportPage latestOdprReports = cultDataRestClientForOdpr.getLatestOdprReportsByDmID(dto.getPage(),dto.getSize(),dmID);
+
+
         /*try {
 
             for (Integer dmID : dto.getDistributionManagers()) {
@@ -63,14 +56,17 @@ public class OnlineDistributionPerformanceSearchService implements IOnlineDistri
 
         }*/
 
-        return reportResultDtos;
+        return latestOdprReports;
     }
 
 
     @Override
-    public List<ReportDto> getLatestReportsByClientID(OnlineDistributionPerformanceSearchRequest dto) {
-        List<ReportDto> latestOdprReports = new ArrayList<>();
-        try{
+    public ReportPage getLatestReportsByClientID(OnlineDistributionPerformanceSearchRequest dto) {
+        ReportPage latestOdprReports =  cultDataRestClientForOdpr.getLatestOdprReportsByClientID(dto.getClient());
+
+
+
+       /* try{
             Client6Dto client = cultDataRestClientForOdpr.getClientById(dto.getClient());
             DistributionManagerDTO distributionManager = cultDataRestClientForOdpr.getDistributionManagersById(client.getDistributionManagerIdCultSwitch());
             latestOdprReports = cultDataRestClientForOdpr.getLatestOdprReportsByClientID(dto.getClient());
@@ -86,7 +82,7 @@ public class OnlineDistributionPerformanceSearchService implements IOnlineDistri
 
         }catch (ReportException e){
 
-        }
+        }*/
         return latestOdprReports;
     }
 

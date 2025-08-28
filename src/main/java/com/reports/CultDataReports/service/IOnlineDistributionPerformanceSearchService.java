@@ -2,13 +2,14 @@ package com.reports.CultDataReports.service;
 
 
 import com.reports.CultDataReports.dto.*;
+import com.reports.CultDataReports.responsedto.ReportPage;
 
 import java.util.List;
 
 public interface IOnlineDistributionPerformanceSearchService {
 
-    public List<ReportDto> getLatestReportsByDmID(OnlineDistributionPerformanceSearchRequest dto);
-    public List<ReportDto> getLatestReportsByClientID(OnlineDistributionPerformanceSearchRequest dto);
+    ReportPage getLatestReportsByDmID(OnlineDistributionPerformanceSearchRequest dto);
+    public ReportPage getLatestReportsByClientID(OnlineDistributionPerformanceSearchRequest dto) ;
     List<DistributionManagerDTO> fetchDistributionManagers(Boolean onlyMapped);
 
 }

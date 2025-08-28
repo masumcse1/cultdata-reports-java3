@@ -3,6 +3,7 @@ package com.reports.CultDataReports.integraion;
 import com.reports.CultDataReports.dto.*;
 import com.reports.CultDataReports.exception.AppException;
 import com.reports.CultDataReports.exception.ReportException;
+import com.reports.CultDataReports.responsedto.ReportPage;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public class CultDataRestClientForOdpr {
 
     private final Logger logger = LoggerFactory.getLogger(CultDataRestClientForOdpr.class);
 
-    public  List<ReportDto>  getLatestOdprReportsByDmID(Integer page, Integer size,Integer distributionManagerID) throws ReportException{
+    public  ReportPage  getLatestOdprReportsByDmID(Integer page, Integer size,Integer distributionManagerID) throws ReportException{
         Map<String, Object> params = new HashMap<>();
         params.put("page",page);
         params.put("limit",size);
@@ -44,7 +45,7 @@ public class CultDataRestClientForOdpr {
         return getLatestOdprReports(params);
     }
 
-    public List<ReportDto> getLatestOdprReportsByClientID(Integer clientID) throws ReportException{
+    public ReportPage getLatestOdprReportsByClientID(Integer clientID) throws ReportException{
         Map<String, Object> params = new HashMap<>();
         params.put("client_id",clientID);
 
@@ -52,7 +53,7 @@ public class CultDataRestClientForOdpr {
     }
 
 
-    public List<ReportDto> getLatestOdprReports(Map<String, Object> queryParams)throws ReportException {
+    public ReportPage getLatestOdprReports(Map<String, Object> queryParams)throws ReportException {
         String apiUrl = baseUrl + "api/reports/latest";
 
 
@@ -73,15 +74,15 @@ public class CultDataRestClientForOdpr {
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<ReportResponseDto> response = restTemplate.exchange(
+            ResponseEntity<ReportPage> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     requestEntity,
-                    new ParameterizedTypeReference<ReportResponseDto>() {}
+                    ReportPage.class
             );
 
             if (response.getBody() != null && response.getBody().getData() != null) {
-                return response.getBody().getData();
+                return response.getBody();
             }
         } catch (RestClientException e) {
             logger.error("Failed to fetch reports for client {} from CultDataAPI: {}", Optional.ofNullable(queryParams.get("client_id")), e.toString());
@@ -91,7 +92,7 @@ public class CultDataRestClientForOdpr {
             throw new AppException("Error while fetching reports from CultDataAPI", e);
         }
 
-        return Collections.emptyList();
+        return null;
     }
 
 

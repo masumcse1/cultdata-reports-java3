@@ -5,6 +5,7 @@ import com.reports.CultDataReports.dto.Client6Dto;
 import com.reports.CultDataReports.dto.DistributionManagerDTO;
 import com.reports.CultDataReports.dto.OnlineDistributionPerformanceSearchRequest;
 import com.reports.CultDataReports.dto.ReportDto;
+import com.reports.CultDataReports.responsedto.ReportPage;
 import com.reports.CultDataReports.service.IOnlineDistributionPerformanceSearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,20 +52,21 @@ public class OnlineDistributionPerformanceWeb {
         request.setPage(1);
         request.setSize(14);
 
-        List<ReportDto> reportDtos= null;
+        //List<ReportDto> reportDtos= null;
+        ReportPage reportPage= null;
        if (request.getClient() == null) {
-            reportDtos = odpSearchService.getLatestReportsByDmID(request);
+           reportPage = odpSearchService.getLatestReportsByDmID(request);
         } else {
-            reportDtos = odpSearchService.getLatestReportsByClientID(request);
+           reportPage = odpSearchService.getLatestReportsByClientID(request);
         }
 
-        List<ReportDto> response = reportDtos.stream()
+       /* List<ReportDto> response = reportDtos.stream()
                 .filter(report -> report != null)
                 .map(this::convertToResponse)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
 
         logger.info("ODP search request --end");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(reportPage.getData());
     }
 
     private ReportDto convertToResponse(ReportDto dto) {
