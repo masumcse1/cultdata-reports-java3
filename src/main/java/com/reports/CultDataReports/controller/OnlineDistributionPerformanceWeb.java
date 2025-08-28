@@ -43,16 +43,14 @@ public class OnlineDistributionPerformanceWeb {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/odp-result")
-    public ResponseEntity<List<ReportDto>> searchOdpReports(
+    @PostMapping("/odp-result-page")
+    public ResponseEntity<ReportPage> searchOdpReports(
             @RequestBody OnlineDistributionPerformanceSearchRequest request) {
 
         logger.info("ODP search request --start");
-
         request.setPage(1);
         request.setSize(14);
 
-        //List<ReportDto> reportDtos= null;
         ReportPage reportPage= null;
        if (request.getClient() == null) {
            reportPage = odpSearchService.getLatestReportsByDmID(request);
@@ -60,13 +58,8 @@ public class OnlineDistributionPerformanceWeb {
            reportPage = odpSearchService.getLatestReportsByClientID(request);
         }
 
-       /* List<ReportDto> response = reportDtos.stream()
-                .filter(report -> report != null)
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());*/
-
         logger.info("ODP search request --end");
-        return ResponseEntity.ok(reportPage.getData());
+        return ResponseEntity.ok(reportPage);
     }
 
     private ReportDto convertToResponse(ReportDto dto) {

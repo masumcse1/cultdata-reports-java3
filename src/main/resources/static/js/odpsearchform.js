@@ -10,10 +10,16 @@ document.addEventListener('alpine:init', () => {
             distributionManagers: [],
             results: [],
             getSelectedDistributionManagerIds: null,
+            paginationLoading: false,
+            totalRecords: 0,
+            currentPage: 1,
+            pageSize: 10,
+            totalPages: 0,
 
             async init() {
-            await this.fetchDistributionManagers();
-            this.initializeDistributionManagerMultiSelect();
+                await this.fetchDistributionManagers();
+                this.initializeDistributionManagerMultiSelect();
+                this.setupPaginationLoaderObserver();
 
                 const clientInput = document.getElementById('client');
                 if (clientInput) {
@@ -57,47 +63,261 @@ document.addEventListener('alpine:init', () => {
                });
             },
 
-            // Perform search with given inputs
-            async searchOdp() {
-
-                if (this.getSelectedDistributionManagerIds) {
-                   const selectedLabels = this.getSelectedDistributionManagerIds();
-                   const selectedIds = this.distributionManagers
-                       .filter(dm => selectedLabels.includes(dm.name))
-                       .map(dm => dm.id.toString());
-
-                   this.searchDTO.distributionManagers = selectedIds;
+            // Grid
+            setupPaginationLoaderObserver() {
+            // This will position the loader correctly when pagination controls are rendered
+                this.$watch('paginationLoading', (value) => {
+                if (value && this.grid) {
+                    this.$nextTick(() => {
+                        const paginationContainer = document.querySelector('.gridjs-pagination');
+                        if (paginationContainer) {
+                            const loader = document.getElementById('pagination-loader');
+                            paginationContainer.style.position = 'relative';
+                            paginationContainer.appendChild(loader);  //TODO
+                        }
+                    });
                 }
+                });
+            },
 
+
+            validateSearch() {
+                this.validationMessage = '';
 
                 if (!this.searchDTO.client && this.searchDTO.distributionManagers.length === 0) {
                     this.validationMessage = 'Please enter either a Client ID or one Distribution Manager';
-                    return;
+                    return false;
                 }
 
-                this.validationMessage = '';
-                this.loading = true;
+                if (this.searchDTO.client && !/^\d*$/.test(this.searchDTO.client)) {
+                this.validationMessage = 'Client ID must contain only numbers';
+                return false;
+            }
 
-                try {
-                    const response = await fetch('/odp/api/odp-result', {
+            return true;
+            },
+
+            searchOdp() {
+                    if (!this.validateSearch()) return;
+
+                    if (this.getSelectedDistributionManagerIds) {
+                       const selectedLabels = this.getSelectedDistributionManagerIds();
+                       const selectedIds = this.distributionManagers
+                           .filter(dm => selectedLabels.includes(dm.name))
+                           .map(dm => dm.id.toString());
+
+                       this.searchDTO.distributionManagers = selectedIds;
+                    }
+
+                    this.validationMessage = '';
+                    this.renderGrid();
+                    },
+
+                    renderGrid() {
+                    try {
+                    if (this.grid) {
+                    this.grid.destroy();
+                    }
+                    this.loading = true;
+
+                    const gridContainer = document.getElementById('results-grid');
+                    if (!gridContainer) return;
+
+                    this.grid = new gridjs.Grid({
+                    columns: [
+                        {
+                            name: 'Client ID',
+                            width: '120px',
+                            formatter: (cell) => cell || 'N/A'
+                        },
+                        {
+                            name: 'Client Name',
+                            formatter: (cell) => cell || 'N/A'
+                        },
+                        {
+                            name: 'DM ID',
+                            width: '100px',
+                            formatter: (cell) => cell || 'N/A'
+                        },
+                        {
+                            name: 'DM Name',
+                            formatter: (cell) => cell || 'N/A'
+                        },
+                        {
+                            name: 'Month',
+                            width: '120px',
+                            formatter: (cell) => cell || 'N/A'
+                        },
+                        {
+                            name: 'Report',
+                            width: '120px',
+                            formatter: (_, row) => {
+                                const pdfUrl = row.cells[5].data;
+                                return pdfUrl ?
+                                    gridjs.html(`<a href="${pdfUrl}" target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-file-pdf"></i> PDF
+                                    </a>`) :
+                                    'No PDF';
+                            }
+                        }
+                    ],
+                    server: {
+                        url: () => this.buildApiUrl(this.currentPage, this.pageSize),
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            client: this.searchDTO.client,
-                            distributionManagers: this.searchDTO.distributionManagers
-                        })
-                    });
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        then: data => {
+                            this.loading = false;
+                            this.paginationLoading = false;
+                            this.results = data.data || [];
+                            this.totalRecords = data.totalRecords || 0;
+                            this.totalPages = data.totalPages || 1;
+                            this.totalClientIdSum = this.calculateTotalClientIdSum(data.allData || this.results);
 
-                    if (!response.ok) throw new Error('Network response was not ok');
+                            // Update summary after data loads
+                            this.$nextTick(() => {
+                                this.updateSummary();
+                            });
 
-                    this.results = await response.json();
-                } catch (error) {
-                    console.error('Error searching ODP:', error);
-                    this.validationMessage = 'An error occurred during the search';
-                } finally {
-                    this.loading = false;
+                            return this.results.map(item => [
+                                item.client?.id || '',
+                                item.client?.name || '',
+                                item.dmId || '',
+                                item.dmName || '',
+                                item.month || '',
+                                item.pdf || null
+                            ]);
+                        },
+                        total: data => data.totalRecords || 0,
+                        body: JSON.stringify(this.searchDTO),
+                        handle: async (res) => {
+                            if (!res.ok) {
+                                const error = await res.json().catch(() => ({}));
+                                throw new Error(error.message || 'Failed to fetch data');
+                            }
+                            return await res.json();
+                        }
+                    },
+                    pagination: {
+                        enabled: true,
+                        limit: this.pageSize,
+                        server: {
+                            url: (prev, page, limit) => {
+                                this.paginationLoading = true;
+                                this.currentPage = page + 1;
+                                this.pageSize = limit;
+                                return this.buildApiUrl(page + 1, limit, prev);
+                            }
+                        }
+                    },
+                    search: true,
+                    sort: true,
+                    fixedHeader: true,
+                    language: {
+                    search: {
+                        placeholder: 'Search in results...'
+                    },
+                    pagination: {
+                        previous: '⬅️',
+                        next: '➡️',
+                        showing: 'Showing',
+                        results: () => 'Records',
+                        noRecords: 'No records found'
+                    }
+            },
+            error: (error) => {
+                this.loading = false;
+                this.paginationLoading = false;
+                return gridjs.html(`
+                    <div class="alert alert-danger p-2">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        ${error.message || 'Error displaying data'}
+                    </div>
+                `);
+            }
+            }).render(gridContainer);
+
+            // Set up event listeners for grid changes
+            this.grid.on('ready', () => this.updateSummary());
+            this.grid.on('pageChanged', () => this.updateSummary());
+            this.grid.on('sort', () => this.updateSummary());
+            this.grid.on('search', () => this.updateSummary());
+
+            } catch (error) {
+            this.loading = false;
+            this.paginationLoading = false;
+            this.validationMessage = `Failed to display results: ${error.message}`;
+            }
+            },
+
+
+            /**
+            * Updates the summary footer with current page data
+            */
+            updateSummary() {
+                const tbody = document.querySelector(".gridjs-table tbody");
+                if (!tbody) return;
+
+                // Calculate sum of client IDs for visible rows (current page)
+                let visibleClientIdSum = 0;
+                const visibleRows = Array.from(tbody.querySelectorAll("tr")).forEach(row => {
+                const clientIdCell = row.children[0]?.textContent.trim();
+                const clientId = parseInt(clientIdCell) || 0;
+                visibleClientIdSum += clientId;
+                });
+
+                // Update footer HTML
+                const footer = document.getElementById("summary-footer");
+                if (footer) {
+                footer.innerHTML = `
+                <table class="custom-footer">
+                    <tbody>
+                        <tr class="summary-footer">
+                            <td>Client ID Sum (Page / All)</td>
+                            <td>${visibleClientIdSum} / ${this.totalClientIdSum}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                `;
                 }
             },
+
+            calculateTotalClientIdSum(data) {
+                return data.reduce((sum, item) => {
+                    const clientId = parseInt(item.client?.id) || 0;
+                    return sum + clientId;
+                }, 0);
+            },
+
+            getBaseApiUrl(prevUrl = null) {
+                if (prevUrl) {
+                    return prevUrl.includes('?') ? prevUrl.split('?')[0] : prevUrl;
+                }
+                return '/odp/api/odp-result-page';
+            },
+
+            buildApiUrl(page, size, prevUrl = null) {
+                const baseUrl = this.getBaseApiUrl(prevUrl);
+                return `${baseUrl}?page=${page}&size=${size}`;
+            },
+
+            clearResults() {
+                this.results = [];
+                this.totalRecords = 0;
+                this.totalPages = 0;
+                if (this.grid) {
+                    try {
+                        this.grid.updateConfig({
+                            data: []
+                        }).forceRender();
+                    } catch (error) {}
+                }
+                // Clear summary footer
+                const footer = document.getElementById('summary-footer');
+                if (footer) footer.innerHTML = '';
+            },
+
             clearForm() {
                 this.searchDTO = {
                     client: null,
