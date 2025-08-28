@@ -31,7 +31,19 @@ public class OnlineDistributionPerformanceSearchService implements IOnlineDistri
     public List<ReportDto> getLatestReportsByDmID(OnlineDistributionPerformanceSearchRequest dto) {
 
         List<ReportDto> reportResultDtos = new ArrayList<>();
-        try {
+        Integer dmID =  dto.getDistributionManagers().get(0);
+        List<ReportDto> latestOdprReports = cultDataRestClientForOdpr.getLatestOdprReportsByDmID(dto.getPage(),dto.getSize(),dmID);
+        latestOdprReports.forEach(report -> {
+            report.setDmId(14752);
+            report.setDmName("dmname");
+            try {
+                report.setMonth(DateUtil.monthFormat(report.getMonth()));
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        reportResultDtos.addAll(latestOdprReports);
+        /*try {
 
             for (Integer dmID : dto.getDistributionManagers()) {
                 DistributionManagerDTO distributionManager = cultDataRestClientForOdpr.getDistributionManagersById(Integer.valueOf(dmID));
@@ -49,7 +61,7 @@ public class OnlineDistributionPerformanceSearchService implements IOnlineDistri
             }
         }catch (ReportException e){
 
-        }
+        }*/
 
         return reportResultDtos;
     }

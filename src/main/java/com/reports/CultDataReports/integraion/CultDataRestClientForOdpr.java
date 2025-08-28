@@ -34,10 +34,10 @@ public class CultDataRestClientForOdpr {
 
     private final Logger logger = LoggerFactory.getLogger(CultDataRestClientForOdpr.class);
 
-    public  List<ReportDto>  getLatestOdprReportsByDmID(Integer distributionManagerID) throws ReportException{
+    public  List<ReportDto>  getLatestOdprReportsByDmID(Integer page, Integer size,Integer distributionManagerID) throws ReportException{
         Map<String, Object> params = new HashMap<>();
-        params.put("limit",5000);
-        params.put("page",1);
+        params.put("page",page);
+        params.put("limit",size);
 
         params.put("cultswitch_distribution_manager_id",distributionManagerID);
 
@@ -46,9 +46,6 @@ public class CultDataRestClientForOdpr {
 
     public List<ReportDto> getLatestOdprReportsByClientID(Integer clientID) throws ReportException{
         Map<String, Object> params = new HashMap<>();
-        params.put("limit",5000);
-        params.put("page",1);
-
         params.put("client_id",clientID);
 
         return getLatestOdprReports(params);

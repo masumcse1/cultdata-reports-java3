@@ -48,15 +48,14 @@ public class OnlineDistributionPerformanceWeb {
 
         logger.info("ODP search request --start");
 
-        OnlineDistributionPerformanceSearchRequest searchDTO = new OnlineDistributionPerformanceSearchRequest();
-        searchDTO.setClient(request.getClient());
-        searchDTO.setDistributionManagers(request.getDistributionManagers());
+        request.setPage(1);
+        request.setSize(14);
 
         List<ReportDto> reportDtos= null;
-       if (searchDTO.getClient() == null) {
-            reportDtos = odpSearchService.getLatestReportsByDmID(searchDTO);
+       if (request.getClient() == null) {
+            reportDtos = odpSearchService.getLatestReportsByDmID(request);
         } else {
-            reportDtos = odpSearchService.getLatestReportsByClientID(searchDTO);
+            reportDtos = odpSearchService.getLatestReportsByClientID(request);
         }
 
         List<ReportDto> response = reportDtos.stream()
