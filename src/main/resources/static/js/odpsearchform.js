@@ -175,12 +175,9 @@ document.addEventListener('alpine:init', () => {
                             this.totalRecords = data.totalRecords || 0;
                             this.totalPages = data.totalPages || 1;
                             this.totalClientIdSum = this.calculateTotalClientIdSum(data.allData || this.results);
-
-
                             this.$nextTick(() => {
                                 this.updateSummary();
                             });
-
                             return this.results.map(item => [
                                 item.client?.id || '',
                                 item.client?.name || '',
