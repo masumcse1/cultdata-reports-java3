@@ -45,11 +45,13 @@ public class OnlineDistributionPerformanceWeb {
 
     @PostMapping("/odp-result-page")
     public ResponseEntity<ReportPage> searchOdpReports(
-            @RequestBody OnlineDistributionPerformanceSearchRequest request) {
+            @RequestBody OnlineDistributionPerformanceSearchRequest request,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int limit) {
 
         logger.info("ODP search request --start");
-        request.setPage(1);
-        request.setSize(14);
+        request.setPage(page);
+        request.setSize(limit);
 
         ReportPage reportPage= null;
        if (request.getClient() == null) {
