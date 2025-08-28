@@ -12,9 +12,10 @@ document.addEventListener('alpine:init', () => {
             getSelectedDistributionManagerIds: null,
             paginationLoading: false,
             totalRecords: 0,
+            totalPages: 0,
             currentPage: 1,
             limit: 10,
-            totalPages: 0,
+
 
             async init() {
                 await this.fetchDistributionManagers();
