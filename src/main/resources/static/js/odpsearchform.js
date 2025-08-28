@@ -73,7 +73,7 @@ document.addEventListener('alpine:init', () => {
                         if (paginationContainer) {
                             const loader = document.getElementById('pagination-loader');
                             paginationContainer.style.position = 'relative';
-                            paginationContainer.appendChild(loader);  //TODO
+                            paginationContainer.appendChild(loader);
                         }
                     });
                 }
