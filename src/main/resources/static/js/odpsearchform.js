@@ -64,97 +64,92 @@ document.addEventListener('alpine:init', () => {
                });
             },
 
-            mapResultsToGridData(results) {
-                            return results.map(item => [
-                                item.client?.id || '',
-                                item.client?.name || '',
-                                item.dmId || '',
-                                item.dmName || '',
-                                item.month || '',
-                                item.pdf || null
-                            ]);
-                        },
+            validateSearch() {
+                        this.validationMessage = '';
+
+                        if (!this.searchDTO.client && this.searchDTO.distributionManagers.length === 0) {
+                            this.validationMessage = 'Please enter either a Client ID or one Distribution Manager';
+                            return false;
+                        }
+
+                        if (this.searchDTO.client && !/^\d*$/.test(this.searchDTO.client)) {
+                        this.validationMessage = 'Client ID must contain only numbers';
+                        return false;
+                    }
+
+                    return true;
+                    },
 
             gridColumns: [
-                    { name: 'Client ID', width: '120px', formatter: (cell) => cell || 'N/A' },
-                    { name: 'Client Name', formatter: (cell) => cell || 'N/A' },
-                    { name: 'DM ID', width: '100px', formatter: (cell) => cell || 'N/A' },
-                    { name: 'DM Name', formatter: (cell) => cell || 'N/A' },
-                    { name: 'Month', width: '120px', formatter: (cell) => cell || 'N/A' },
-                    {
-                      name: 'Report',
-                      width: '120px',
-                      formatter: (_, row) => {
-                        const pdfUrl = row.cells[5].data;
-                        return pdfUrl
-                          ? gridjs.html(`<a href="${pdfUrl}" target="_blank" class="btn btn-sm btn-primary">
-                                          <i class="fas fa-file-pdf"></i> PDF
-                                        </a>`)
-                          : 'No PDF';
-                      }
-                    }
-                  ],
+                { name: 'Client ID', width: '120px', formatter: (cell) => cell || 'N/A' },
+                { name: 'Client Name', formatter: (cell) => cell || 'N/A' },
+                { name: 'DM ID', width: '100px', formatter: (cell) => cell || 'N/A' },
+                { name: 'DM Name', formatter: (cell) => cell || 'N/A' },
+                { name: 'Month', width: '120px', formatter: (cell) => cell || 'N/A' },
+                {
+                  name: 'Report',
+                  width: '120px',
+                  formatter: (_, row) => {
+                    const pdfUrl = row.cells[5].data;
+                    return pdfUrl
+                      ? gridjs.html(`<a href="${pdfUrl}" target="_blank" class="btn btn-sm btn-primary">
+                                      <i class="fas fa-file-pdf"></i> PDF
+                                    </a>`)
+                      : 'No PDF';
+                  }
+                }
+              ],
 
-
+            mapResultsToGridData(results) {
+                        return results.map(item => [
+                            item.client?.id || '',
+                            item.client?.name || '',
+                            item.dmId || '',
+                            item.dmName || '',
+                            item.month || '',
+                            item.pdf || null
+                        ]);
+                    },
 
             // Grid
             setupPaginationLoaderObserver() {
             // This will position the loader correctly when pagination controls are rendered
-                this.$watch('paginationLoading', (value) => {
-                if (value && this.grid) {
-                    this.$nextTick(() => {
-                        const paginationContainer = document.querySelector('.gridjs-pagination');
-                        if (paginationContainer) {
-                            const loader = document.getElementById('pagination-loader');
-                            paginationContainer.style.position = 'relative';
-                            paginationContainer.appendChild(loader);
-                        }
-                    });
-                }
+            this.$watch('paginationLoading', (value) => {
+            if (value && this.grid) {
+                this.$nextTick(() => {
+                    const paginationContainer = document.querySelector('.gridjs-pagination');
+                    if (paginationContainer) {
+                        const loader = document.getElementById('pagination-loader');
+                        paginationContainer.style.position = 'relative';
+                        paginationContainer.appendChild(loader);
+                    }
                 });
-            },
-
-
-            validateSearch() {
-                this.validationMessage = '';
-
-                if (!this.searchDTO.client && this.searchDTO.distributionManagers.length === 0) {
-                    this.validationMessage = 'Please enter either a Client ID or one Distribution Manager';
-                    return false;
-                }
-
-                if (this.searchDTO.client && !/^\d*$/.test(this.searchDTO.client)) {
-                this.validationMessage = 'Client ID must contain only numbers';
-                return false;
             }
-
-            return true;
+            });
             },
-
 
             searchOdp() {
-                    if (!this.validateSearch()) return;
+                if (!this.validateSearch()) return;
 
-                    if (this.getSelectedDistributionManagerIds) {
-                       const selectedLabels = this.getSelectedDistributionManagerIds();
-                       const selectedIds = this.distributionManagers
-                           .filter(dm => selectedLabels.includes(dm.name))
-                           .map(dm => dm.id.toString());
+                if (this.getSelectedDistributionManagerIds) {
+                   const selectedLabels = this.getSelectedDistributionManagerIds();
+                   const selectedIds = this.distributionManagers
+                       .filter(dm => selectedLabels.includes(dm.name))
+                       .map(dm => dm.id.toString());
 
-                       this.searchDTO.distributionManagers = selectedIds;
-                    }
+                   this.searchDTO.distributionManagers = selectedIds;
+                }
 
-                    this.validationMessage = '';
+                this.validationMessage = '';
 
-                   PaginationGridLib.renderGrid({
-                       columns: this.gridColumns,
-                       url: '/odp/api/odp-result-page',
-                       mapResultsFn: (results) => this.mapResultsToGridData(results),
-                       body: this.searchDTO,
-                       ctx: this   // <-- pass the Alpine component context
-                   });
+               PaginationGridLib.renderGrid({
+                   columns: this.gridColumns,
+                   url: '/odp/api/odp-result-page',
+                   mapResultsFn: (results) => this.mapResultsToGridData(results),
+                   body: this.searchDTO,
+                   ctx: this   // <-- pass the Alpine component context
+               });
             },
-
 
             clearResults() {
                 this.results = [];
