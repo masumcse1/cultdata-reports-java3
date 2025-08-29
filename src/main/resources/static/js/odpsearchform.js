@@ -145,11 +145,18 @@ document.addEventListener('alpine:init', () => {
                     }
 
                     this.validationMessage = '';
-                    this.renderGrid();
+                    //this.renderGrid();
+
+                    this.renderGrid(
+                      this.gridColumns,
+                      '/odp/api/odp-result-page',
+                      (results) => this.mapResultsToGridData(results),
+                      this.searchDTO
+                    );
                     },
 
-                    renderGrid() {
-                    try {
+           renderGrid(gridColumns, paginationUrl, mapResultsFn, postMethodBody) {
+               try {
                     if (this.grid) {
                     this.grid.destroy();
                     }
@@ -159,9 +166,9 @@ document.addEventListener('alpine:init', () => {
                     if (!gridContainer) return;
 
                     this.grid = new gridjs.Grid({
-                    columns: this.gridColumns,
+                    columns: gridColumns,
                     server: {
-                        url: '/odp/api/odp-result-page',
+                        url: paginationUrl,
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -177,9 +184,10 @@ document.addEventListener('alpine:init', () => {
                                 this.updateSummary();
                             });
                             return this.mapResultsToGridData(this.results);
+                            return mapResultsFn ? mapResultsFn(this.results) : this.results;
                         },
                         total: data => data.totalRecords || 0,
-                        body: JSON.stringify(this.searchDTO)
+                        body: JSON.stringify(postMethodBody)
                     },
                     pagination: {
                         enabled: true,
