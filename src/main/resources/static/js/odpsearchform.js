@@ -64,6 +64,17 @@ document.addEventListener('alpine:init', () => {
                });
             },
 
+            mapResultsToGridData(results) {
+                            return results.map(item => [
+                                item.client?.id || '',
+                                item.client?.name || '',
+                                item.dmId || '',
+                                item.dmName || '',
+                                item.month || '',
+                                item.pdf || null
+                            ]);
+                        },
+
             gridColumns: [
                     { name: 'Client ID', width: '120px', formatter: (cell) => cell || 'N/A' },
                     { name: 'Client Name', formatter: (cell) => cell || 'N/A' },
@@ -83,6 +94,8 @@ document.addEventListener('alpine:init', () => {
                       }
                     }
                   ],
+
+
 
             // Grid
             setupPaginationLoaderObserver() {
@@ -148,7 +161,7 @@ document.addEventListener('alpine:init', () => {
                     this.grid = new gridjs.Grid({
                     columns: this.gridColumns,
                     server: {
-                         url: '/odp/api/odp-result-page',
+                        url: '/odp/api/odp-result-page',
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -163,14 +176,7 @@ document.addEventListener('alpine:init', () => {
                             this.$nextTick(() => {
                                 this.updateSummary();
                             });
-                            return this.results.map(item => [
-                                item.client?.id || '',
-                                item.client?.name || '',
-                                item.dmId || '',
-                                item.dmName || '',
-                                item.month || '',
-                                item.pdf || null
-                            ]);
+                            return this.mapResultsToGridData(this.results);
                         },
                         total: data => data.totalRecords || 0,
                         body: JSON.stringify(this.searchDTO)
