@@ -80,6 +80,21 @@ document.addEventListener('alpine:init', () => {
                 return true;
              },
 
+            setupPaginationLoaderObserver() {
+                 this.$watch('paginationLoading', (value) => {
+                 if (value && this.grid) {
+                     this.$nextTick(() => {
+                         const paginationContainer = document.querySelector('.gridjs-pagination');
+                         if (paginationContainer) {
+                             const loader = document.getElementById('pagination-loader');
+                             paginationContainer.style.position = 'relative';
+                             paginationContainer.appendChild(loader);
+                         }
+                     });
+                 }
+                 });
+             },
+
             gridColumns: [
                 { name: 'Client ID', width: '120px', formatter: (cell) => cell || 'N/A' },
                 { name: 'Client Name', formatter: (cell) => cell || 'N/A' },
@@ -110,21 +125,6 @@ document.addEventListener('alpine:init', () => {
                     item.pdf || null
                 ]);
              },
-
-            setupPaginationLoaderObserver() {
-                this.$watch('paginationLoading', (value) => {
-                if (value && this.grid) {
-                    this.$nextTick(() => {
-                        const paginationContainer = document.querySelector('.gridjs-pagination');
-                        if (paginationContainer) {
-                            const loader = document.getElementById('pagination-loader');
-                            paginationContainer.style.position = 'relative';
-                            paginationContainer.appendChild(loader);
-                        }
-                    });
-                }
-                });
-            },
 
             searchOdp() {
                 if (!this.validateSearch()) return;
