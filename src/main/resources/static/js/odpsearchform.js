@@ -64,6 +64,26 @@ document.addEventListener('alpine:init', () => {
                });
             },
 
+            gridColumns: [
+                    { name: 'Client ID', width: '120px', formatter: (cell) => cell || 'N/A' },
+                    { name: 'Client Name', formatter: (cell) => cell || 'N/A' },
+                    { name: 'DM ID', width: '100px', formatter: (cell) => cell || 'N/A' },
+                    { name: 'DM Name', formatter: (cell) => cell || 'N/A' },
+                    { name: 'Month', width: '120px', formatter: (cell) => cell || 'N/A' },
+                    {
+                      name: 'Report',
+                      width: '120px',
+                      formatter: (_, row) => {
+                        const pdfUrl = row.cells[5].data;
+                        return pdfUrl
+                          ? gridjs.html(`<a href="${pdfUrl}" target="_blank" class="btn btn-sm btn-primary">
+                                          <i class="fas fa-file-pdf"></i> PDF
+                                        </a>`)
+                          : 'No PDF';
+                      }
+                    }
+                  ],
+
             // Grid
             setupPaginationLoaderObserver() {
             // This will position the loader correctly when pagination controls are rendered
@@ -98,6 +118,7 @@ document.addEventListener('alpine:init', () => {
             return true;
             },
 
+
             searchOdp() {
                     if (!this.validateSearch()) return;
 
@@ -125,43 +146,7 @@ document.addEventListener('alpine:init', () => {
                     if (!gridContainer) return;
 
                     this.grid = new gridjs.Grid({
-                    columns: [
-                        {
-                            name: 'Client ID',
-                            width: '120px',
-                            formatter: (cell) => cell || 'N/A'
-                        },
-                        {
-                            name: 'Client Name',
-                            formatter: (cell) => cell || 'N/A'
-                        },
-                        {
-                            name: 'DM ID',
-                            width: '100px',
-                            formatter: (cell) => cell || 'N/A'
-                        },
-                        {
-                            name: 'DM Name',
-                            formatter: (cell) => cell || 'N/A'
-                        },
-                        {
-                            name: 'Month',
-                            width: '120px',
-                            formatter: (cell) => cell || 'N/A'
-                        },
-                        {
-                            name: 'Report',
-                            width: '120px',
-                            formatter: (_, row) => {
-                                const pdfUrl = row.cells[5].data;
-                                return pdfUrl ?
-                                    gridjs.html(`<a href="${pdfUrl}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-file-pdf"></i> PDF
-                                    </a>`) :
-                                    'No PDF';
-                            }
-                        }
-                    ],
+                    columns: this.gridColumns,
                     server: {
                          url: '/odp/api/odp-result-page',
                         method: 'POST',
