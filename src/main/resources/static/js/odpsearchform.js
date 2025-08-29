@@ -65,20 +65,20 @@ document.addEventListener('alpine:init', () => {
             },
 
             validateSearch() {
-                        this.validationMessage = '';
+                this.validationMessage = '';
 
-                        if (!this.searchDTO.client && this.searchDTO.distributionManagers.length === 0) {
-                            this.validationMessage = 'Please enter either a Client ID or one Distribution Manager';
-                            return false;
-                        }
+                if (!this.searchDTO.client && this.searchDTO.distributionManagers.length === 0) {
+                    this.validationMessage = 'Please enter either a Client ID or one Distribution Manager';
+                return false;
+                }
 
-                        if (this.searchDTO.client && !/^\d*$/.test(this.searchDTO.client)) {
-                        this.validationMessage = 'Client ID must contain only numbers';
-                        return false;
-                    }
+                if (this.searchDTO.client && !/^\d*$/.test(this.searchDTO.client)) {
+                    this.validationMessage = 'Client ID must contain only numbers';
+                return false;
+                }
 
-                    return true;
-                    },
+                return true;
+             },
 
             gridColumns: [
                 { name: 'Client ID', width: '120px', formatter: (cell) => cell || 'N/A' },
@@ -101,31 +101,29 @@ document.addEventListener('alpine:init', () => {
               ],
 
             mapResultsToGridData(results) {
-                        return results.map(item => [
-                            item.client?.id || '',
-                            item.client?.name || '',
-                            item.dmId || '',
-                            item.dmName || '',
-                            item.month || '',
-                            item.pdf || null
-                        ]);
-                    },
+                return results.map(item => [
+                    item.client?.id || '',
+                    item.client?.name || '',
+                    item.dmId || '',
+                    item.dmName || '',
+                    item.month || '',
+                    item.pdf || null
+                ]);
+             },
 
-            // Grid
             setupPaginationLoaderObserver() {
-            // This will position the loader correctly when pagination controls are rendered
-            this.$watch('paginationLoading', (value) => {
-            if (value && this.grid) {
-                this.$nextTick(() => {
-                    const paginationContainer = document.querySelector('.gridjs-pagination');
-                    if (paginationContainer) {
-                        const loader = document.getElementById('pagination-loader');
-                        paginationContainer.style.position = 'relative';
-                        paginationContainer.appendChild(loader);
-                    }
+                this.$watch('paginationLoading', (value) => {
+                if (value && this.grid) {
+                    this.$nextTick(() => {
+                        const paginationContainer = document.querySelector('.gridjs-pagination');
+                        if (paginationContainer) {
+                            const loader = document.getElementById('pagination-loader');
+                            paginationContainer.style.position = 'relative';
+                            paginationContainer.appendChild(loader);
+                        }
+                    });
+                }
                 });
-            }
-            });
             },
 
             searchOdp() {
