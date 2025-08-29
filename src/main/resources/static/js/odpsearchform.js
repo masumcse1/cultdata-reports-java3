@@ -145,114 +145,16 @@ document.addEventListener('alpine:init', () => {
                     }
 
                     this.validationMessage = '';
-                    //this.renderGrid();
 
-                    this.renderGrid(
-                      this.gridColumns,
-                      '/odp/api/odp-result-page',
-                      (results) => this.mapResultsToGridData(results),
-                      this.searchDTO
-                    );
-                    },
-
-           renderGrid(gridColumns, paginationUrl, mapResultsFn, postMethodBody) {
-               try {
-                    if (this.grid) {
-                    this.grid.destroy();
-                    }
-                    this.loading = true;
-
-                    const gridContainer = document.getElementById('results-grid');
-                    if (!gridContainer) return;
-
-                    this.grid = new gridjs.Grid({
-                    columns: gridColumns,
-                    server: {
-                        url: paginationUrl,
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        then: data => {
-                            this.loading = false;
-                            this.paginationLoading = false;
-                            this.results = data.data || [];
-                            this.totalRecords = data.totalRecords || 0;
-                            this.totalPages = data.totalPages || 1;
-                            this.totalClientIdSum = this.calculateTotalClientIdSum(data.allData || this.results);
-                            this.$nextTick(() => {
-                                this.updateSummary();
-                            });
-                            return this.mapResultsToGridData(this.results);
-                            return mapResultsFn ? mapResultsFn(this.results) : this.results;
-                        },
-                        total: data => data.totalRecords || 0,
-                        body: JSON.stringify(postMethodBody)
-                    },
-                    pagination: {
-                        enabled: true,
-                        limit: this.limit,
-                        server: {
-                            url: (prev, page, limit) => `${prev}?limit=${limit}&page=${page + 1}`
-                        }
-                    },
-                    search: true,
-                    sort: true,
-                    fixedHeader: true,
-
-            }).render(gridContainer);
-
-            // Set up event listeners for grid changes
-            this.grid.on('ready', () => this.updateSummary());
-            this.grid.on('pageChanged', () => this.updateSummary());
-            this.grid.on('sort', () => this.updateSummary());
-            this.grid.on('search', () => this.updateSummary());
-
-            } catch (error) {
-            this.loading = false;
-            this.paginationLoading = false;
-            this.validationMessage = `Failed to display results: ${error.message}`;
-            }
+                   PaginationGridLib.renderGrid({
+                       columns: this.gridColumns,
+                       url: '/odp/api/odp-result-page',
+                       mapResultsFn: (results) => this.mapResultsToGridData(results),
+                       body: this.searchDTO,
+                       ctx: this   // <-- pass the Alpine component context
+                   });
             },
 
-
-            /**
-            * Updates the summary footer with current page data
-            */
-            updateSummary() {
-                const tbody = document.querySelector(".gridjs-table tbody");
-                if (!tbody) return;
-
-                // Calculate sum of client IDs for visible rows (current page)
-                let visibleClientIdSum = 0;
-                const visibleRows = Array.from(tbody.querySelectorAll("tr")).forEach(row => {
-                const clientIdCell = row.children[0]?.textContent.trim();
-                const clientId = parseInt(clientIdCell) || 0;
-                visibleClientIdSum += clientId;
-                });
-
-                // Update footer HTML
-                const footer = document.getElementById("summary-footer");
-                if (footer) {
-                footer.innerHTML = `
-                <table class="custom-footer">
-                    <tbody>
-                        <tr class="summary-footer">
-                            <td>Client ID Sum (Page / All)</td>
-                            <td>${visibleClientIdSum} / ${this.totalClientIdSum}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                `;
-                }
-            },
-
-            calculateTotalClientIdSum(data) {
-                return data.reduce((sum, item) => {
-                    const clientId = parseInt(item.client?.id) || 0;
-                    return sum + clientId;
-                }, 0);
-            },
 
             clearResults() {
                 this.results = [];
